@@ -21,6 +21,7 @@ import { useTranslation } from 'next-i18next';
 import { Conversation, Message } from '@/types/chat';
 import { Plugin } from '@/types/plugin';
 import { Prompt } from '@/types/prompt';
+import { Variable } from '@/types/variable';
 
 import HomeContext from '@/pages/api/home/home.context';
 
@@ -54,7 +55,7 @@ export const ChatInput = ({
   const { t } = useTranslation('chat');
 
   const {
-    state: { selectedConversation, messageIsStreaming, prompts },
+    state: { selectedConversation, messageIsStreaming, prompts, serverSidePluginKeysSet },
 
     dispatch: homeDispatch,
   } = useContext(HomeContext);
@@ -64,7 +65,7 @@ export const ChatInput = ({
   const [showPromptList, setShowPromptList] = useState(false);
   const [activePromptIndex, setActivePromptIndex] = useState(0);
   const [promptInputValue, setPromptInputValue] = useState('');
-  const [variables, setVariables] = useState<string[]>([]);
+  const [variables, setVariables] = useState<Variable[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [showPluginSelect, setShowPluginSelect] = useState(false);
   const [plugin, setPlugin] = useState<Plugin | null>(null);
@@ -186,13 +187,25 @@ export const ChatInput = ({
     }
   };
 
-  const parseVariables = (content: string) => {
+
+  const parseVariables = (content: string): Variable[] => {
     const regex = /{{(.*?)}}/g;
-    const foundVariables = [];
+    const foundVariables: Variable[] = [];
     let match;
 
     while ((match = regex.exec(content)) !== null) {
-      foundVariables.push(match[1]);
+      let variable: Variable = {
+        name: match[1],
+        options: [],
+      };
+
+      if (match[1].includes(':'))
+        variable = {
+          name: match[1].split(':')[0],
+          options: match[1].split(':')[1].split(','),
+        };
+
+      foundVariables.push(variable);
     }
 
     return foundVariables;
@@ -226,8 +239,11 @@ export const ChatInput = ({
   };
 
   const handleSubmit = (updatedVariables: string[]) => {
-    const newContent = content?.replace(/{{(.*?)}}/g, (match, variable) => {
-      const index = variables.indexOf(variable);
+    const newContent = content?.replace(/{{(.*?)}}/g, (match, variableName) => {
+      if (variableName.includes(':')) variableName = variableName.split(':')[0];
+      const index = variables.findIndex(
+        (variable) => variable.name === variableName,
+      );
       return updatedVariables[index];
     });
 
@@ -248,9 +264,8 @@ export const ChatInput = ({
     if (textareaRef && textareaRef.current) {
       textareaRef.current.style.height = 'inherit';
       textareaRef.current.style.height = `${textareaRef.current?.scrollHeight}px`;
-      textareaRef.current.style.overflow = `${
-        textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
-      }`;
+      textareaRef.current.style.overflow = `${textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
+        }`;
     }
   }, [content, textareaRef]);
 
@@ -298,7 +313,7 @@ export const ChatInput = ({
           <button
             className="absolute left-2 top-2 rounded-sm p-1 text-neutral-800 opacity-60 hover:bg-neutral-200 hover:text-neutral-900 dark:bg-opacity-50 dark:text-neutral-100 dark:hover:text-neutral-200"
             onClick={() => setShowPluginSelect(!showPluginSelect)}
-            onKeyDown={(e) => {}}
+            onKeyDown={(e) => { }}
           >
             {plugin ? <IconBrandGoogle size={20} /> : <IconBolt size={20} />}
           </button>
@@ -333,11 +348,10 @@ export const ChatInput = ({
               resize: 'none',
               bottom: `${textareaRef?.current?.scrollHeight}px`,
               maxHeight: '400px',
-              overflow: `${
-                textareaRef.current && textareaRef.current.scrollHeight > 400
-                  ? 'auto'
-                  : 'hidden'
-              }`,
+              overflow: `${textareaRef.current && textareaRef.current.scrollHeight > 400
+                ? 'auto'
+                : 'hidden'
+                }`,
             }}
             placeholder={
               t('Type a message or type "/" to select a prompt...') || ''

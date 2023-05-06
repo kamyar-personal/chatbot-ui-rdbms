@@ -20,12 +20,13 @@ export default withAuth({
         return false;
       } else {
         const pattern = process.env.NEXTAUTH_EMAIL_PATTERN || '';
-        const domain = token?.email?.split('@')[1];
-        if (!pattern || domain.match('^' + pattern + '$')) {
-          return true;
-        }
-
-        return false;
+        if (!pattern) return true;
+        const allowedEmails = pattern.split(';');
+        const email = token.email;
+        const isAllowed = allowedEmails.some((allowedEmail) => {
+          return email.match(allowedEmail);
+        });
+        return isAllowed;
       }
     },
   },

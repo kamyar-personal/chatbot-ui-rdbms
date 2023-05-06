@@ -28,6 +28,7 @@ import { MemoizedChatMessage } from './MemoizedChatMessage';
 import { ModelSelect } from './ModelSelect';
 import { SystemPromptSection } from './SystemPromptSection';
 import { TemperatureSlider } from './Temperature';
+import { SystemPrompt } from './SystemPrompt';
 
 interface Props {
   stopConversationRef: MutableRefObject<boolean>;
@@ -47,6 +48,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       serverSideApiKeyIsSet,
       modelError,
       loading,
+      prompts,
       systemPrompts,
       user,
     },
@@ -251,6 +253,16 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                       <ModelSelect />
 
                       <SystemPromptSection systemPrompts={systemPrompts} />
+                      <SystemPrompt
+                        conversation={selectedConversation}
+                        prompts={prompts}
+                        onChangePrompt={(prompt) =>
+                          handleUpdateConversation(selectedConversation, {
+                            key: 'prompt',
+                            value: prompt,
+                          })
+                        }
+                      />
 
                       <TemperatureSlider
                         label={t('Temperature')}
