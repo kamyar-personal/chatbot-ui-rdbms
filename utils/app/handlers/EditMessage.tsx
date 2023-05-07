@@ -81,6 +81,7 @@ export const editMessageHandler = async (
       plugin,
       apiKey,
       pluginKeys,
+      null
     );
 
     if (!response.ok) {

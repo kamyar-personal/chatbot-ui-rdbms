@@ -25,6 +25,7 @@ export const regenerateMessageHandler = async (
   storageType: StorageType,
   apiKey: string,
   pluginKeys: PluginKey[],
+  additionalData: any,
   homeDispatch: React.Dispatch<any>,
 ) => {
   if (selectedConversation) {
@@ -63,6 +64,7 @@ export const regenerateMessageHandler = async (
       plugin,
       apiKey,
       pluginKeys,
+      additionalData
     );
 
     if (!response.ok) {

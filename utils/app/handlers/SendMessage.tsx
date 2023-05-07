@@ -24,6 +24,7 @@ export const sendHandlerFunction = async (
   storageType: StorageType,
   apiKey: string,
   pluginKeys: PluginKey[],
+  additionalData: any,
   homeDispatch: React.Dispatch<any>,
 ) => {
   if (selectedConversation) {
@@ -56,6 +57,7 @@ export const sendHandlerFunction = async (
       plugin,
       apiKey,
       pluginKeys,
+      additionalData
     );
 
     if (!response.ok) {

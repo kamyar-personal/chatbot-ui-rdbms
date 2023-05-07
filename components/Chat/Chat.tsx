@@ -322,7 +322,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                         storageType,
                         apiKey,
                         pluginKeys,
-                        homeDispatch,
+                        homeDispatch
                       );
                     }}
                   />
@@ -341,7 +341,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
           <ChatInput
             stopConversationRef={stopConversationRef}
             textareaRef={textareaRef}
-            onSend={(conversation, message, plugin) => {
+            onSend={(conversation, message, plugin, additionalData) => {
               setCurrentMessage(message);
               handleSend(
                 user,
@@ -353,11 +353,12 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                 storageType,
                 apiKey,
                 pluginKeys,
+                additionalData,
                 homeDispatch,
               );
             }}
             onScrollDownClick={handleScrollDown}
-            onRegenerate={(conversation) => {
+            onRegenerate={(conversation, additionalData) => {
               if (currentMessage) {
                 handleRegenerate(
                   user,
@@ -369,6 +370,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                   storageType,
                   apiKey,
                   pluginKeys,
+                  additionalData,
                   homeDispatch,
                 );
               }

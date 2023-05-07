@@ -13,12 +13,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<any>) => {
   try {
-    const { messages, key, model, googleAPIKey, googleCSEId } =
+    const { messages, key, model, googleAPIKey, googleCSEId, additionalData } =
       req.body as GoogleBody;
 
     const userMessage = messages[messages.length - 1];
     const query = encodeURIComponent(userMessage.content.trim());
-
     const googleRes = await fetch(
       `https://customsearch.googleapis.com/customsearch/v1?key=${
         googleAPIKey ? googleAPIKey : process.env.GOOGLE_API_KEY
@@ -28,21 +27,35 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<any>) => {
     );
 
     const googleData = await googleRes.json();
+    let sources: GoogleSource[] = [];
+    const additionalDataArray = additionalData.split(';');
+    additionalDataArray.forEach((item: string) => {
+      sources.push({
+        title: '',
+        link: item,
+        displayLink: item,
+        snippet: '',
+        image: '',
+        text: '',
+      });
+    });
 
-    const sources: GoogleSource[] = googleData.items.map((item: any) => ({
-      title: item.title,
-      link: item.link,
-      displayLink: item.displayLink,
-      snippet: item.snippet,
-      image: item.pagemap?.cse_image?.[0]?.src,
-      text: '',
-    }));
+    sources = sources.concat(
+      googleData.items.map((item: any) => ({
+        title: item.title,
+        link: item.link,
+        displayLink: item.displayLink,
+        snippet: item.snippet,
+        image: item.pagemap?.cse_image?.[0]?.src,
+        text: '',
+      })),
+    );
 
     const sourcesWithText: any = await Promise.all(
       sources.map(async (source) => {
         try {
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Request timed out')), 5000),
+            setTimeout(() => reject(new Error('Request timed out')), 10000),
           );
 
           const res = (await Promise.race([

@@ -24,6 +24,8 @@ import { storageGetPrompts, storageUpdatePrompts } from './storage/prompts';
 import { saveSelectedConversation } from './storage/selectedConversation';
 import { deleteSelectedConversation } from './storage/selectedConversation';
 
+import { v4 as uuidv4 } from 'uuid';
+
 export function isExportFormatV1(obj: any): obj is ExportFormatV1 {
   return Array.isArray(obj);
 }
@@ -123,6 +125,17 @@ export const importData = async (
       index === self.findIndex((f) => f.id === folder.id),
   );
 
+  // set new ids for folders, remove any duplicate folder
+  const idMap = new Map();
+  for (const folder of newFolders) {
+    if (oldFolders.some((f) => f.id === folder.id)) {
+      continue;
+    }
+    const newId = uuidv4();
+    idMap.set(folder.id, newId);
+    folder.id = newId;
+  }
+
   await storageUpdateFolders(storageType, user, newFolders);
 
   // Updating conversations
@@ -131,6 +144,18 @@ export const importData = async (
     (conversation, index, self) =>
       index === self.findIndex((c) => c.id === conversation.id),
   );
+
+  // update conversations with new folder ids
+  for (const conversation of newHistory) {
+    if (conversation.folderId && idMap.has(conversation.folderId)) {
+      conversation.folderId = idMap.get(conversation.folderId);
+    }
+    if (oldConversations.some((f) => f.id === conversation.id)) {
+      continue;
+    }
+    const newId = uuidv4();
+    conversation.id = newId;
+  }
 
   await storageUpdateConversations(storageType, user, newHistory);
 
@@ -159,6 +184,17 @@ export const importData = async (
     (prompt, index, self) =>
       index === self.findIndex((p) => p.id === prompt.id),
   );
+
+  for (const prompt of newPrompts) {
+    if (prompt.folderId && idMap.has(prompt.folderId)) {
+      prompt.folderId = idMap.get(prompt.folderId);
+    }
+    if (oldPrompts.some((f) => f.id === prompt.id)) {
+      continue;
+    }
+    const newId = uuidv4();
+    prompt.id = newId;
+  }
 
   storageUpdatePrompts(storageType, user, prompts);
 

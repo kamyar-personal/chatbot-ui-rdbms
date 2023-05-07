@@ -2,6 +2,7 @@ import {
   IconArrowDown,
   IconBolt,
   IconBrandGoogle,
+  IconInputSearch,
   IconPlayerStop,
   IconRepeat,
   IconSend,
@@ -30,14 +31,16 @@ import { PromptList } from './PromptList';
 import { VariableModal } from './VariableModal';
 
 import { v4 as uuidv4 } from 'uuid';
+import { AdditionalDataModal } from './AdditionalDataModal';
 
 interface Props {
   onSend: (
     conversation: Conversation | undefined,
     message: Message,
     plugin: Plugin | null,
+    additionalData: any
   ) => void;
-  onRegenerate: (conversation: Conversation | undefined) => void;
+  onRegenerate: (conversation: Conversation | undefined, additionalData: any) => void;
   onScrollDownClick: () => void;
   stopConversationRef: MutableRefObject<boolean>;
   textareaRef: MutableRefObject<HTMLTextAreaElement | null>;
@@ -68,7 +71,9 @@ export const ChatInput = ({
   const [variables, setVariables] = useState<Variable[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [showPluginSelect, setShowPluginSelect] = useState(false);
+  const [showAdditionalDataModal, setShowAdditionalDataModal] = useState(false);
   const [plugin, setPlugin] = useState<Plugin | null>(null);
+  const [additionalData, setAdditionalData] = useState<any>(null);
 
   const promptListRef = useRef<HTMLUListElement | null>(null);
 
@@ -109,9 +114,11 @@ export const ChatInput = ({
       selectedConversation,
       { id: messageId, role: 'user', content },
       plugin,
+      additionalData
     );
     setContent('');
     setPlugin(null);
+    setAdditionalData(null);
 
     if (window.innerWidth < 640 && textareaRef && textareaRef.current) {
       textareaRef.current.blur();
@@ -119,7 +126,7 @@ export const ChatInput = ({
   };
 
   const handleRegenerate = () => {
-    onRegenerate(selectedConversation);
+    onRegenerate(selectedConversation, additionalData);
   };
 
   const handleStopConversation = () => {
@@ -318,6 +325,7 @@ export const ChatInput = ({
             {plugin ? <IconBrandGoogle size={20} /> : <IconBolt size={20} />}
           </button>
 
+
           {showPluginSelect && (
             <div className="absolute left-0 bottom-14 rounded bg-white dark:bg-[#343541]">
               <PluginSelect
@@ -332,6 +340,7 @@ export const ChatInput = ({
                 onPluginChange={(plugin: Plugin) => {
                   setPlugin(plugin);
                   setShowPluginSelect(false);
+                  setAdditionalData(null);
 
                   if (textareaRef && textareaRef.current) {
                     textareaRef.current.focus();
@@ -406,21 +415,26 @@ export const ChatInput = ({
               onClose={() => setIsModalVisible(false)}
             />
           )}
+
+          {(showAdditionalDataModal &&
+            <AdditionalDataModal
+              value={additionalData}
+              onSubmit={(newValue) => { setAdditionalData(newValue); }}
+              onClose={() => { setShowAdditionalDataModal(false); console.log('closing') }}
+            />
+          )}
         </div>
       </div>
       <div className="px-3 pt-2 pb-3 text-center text-[12px] text-black/50 dark:text-white/50 md:px-4 md:pt-3 md:pb-6">
-        <a
-          href="https://github.com/mckaywrigley/chatbot-ui"
-          target="_blank"
-          rel="noreferrer"
-          className="underline"
+        <button
+          onClick={() => {
+            setShowAdditionalDataModal(true);
+          }}
+          className="text-neutral-700 dark:text-neutral-400 items-center"
         >
-          ChatBot UI
-        </a>
-        .{' '}
-        {t(
-          "Chatbot UI is an advanced chatbot kit for OpenAI's chat models aiming to mimic ChatGPT's interface and functionality.",
-        )}
+          <IconInputSearch size={18} className={'inline mr-1'} />
+          {t('Additional Data')}
+        </button>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ export const sendChatRequest = async (
   plugin: Plugin | null,
   apiKey: string,
   pluginKeys: PluginKey[],
+  additionalData: any,
 ) => {
   const chatBody: ChatBody = {
     model: conversation.model,
@@ -15,6 +16,7 @@ export const sendChatRequest = async (
     key: apiKey,
     prompt: conversation.prompt,
     temperature: conversation.temperature,
+    additionalData: additionalData,
   };
   const endpoint = getEndpoint(plugin);
   let body;
